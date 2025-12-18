@@ -1,30 +1,24 @@
 -- Kaggle dataset this information was pulled from https://www.kaggle.com/datasets/rohiteng/amazon-sales-dataset/data
 
 -- Checking import status: the original dataset had 100,000 rows but only 50,722 rows were imported. 
+
 SELECT *
 FROM amazon_sales_data_project;
 
--- Checking for duplicates - none found
-
-SELECT OrderID, COUNT(1)
-FROM amazon_sales_data_project
-GROUP BY OrderID
-HAVING COUNT(1) >1;
-
 -- What is the total revenute generated across all orders? 
 
-SELECT SUM(totalamount)
+SELECT SUM(totalamount) AS total_rev
 FROM amazon_sales_data_project;
 
 -- How many total orders are in the dataset?
 
-SELECT COUNT(OrderID)
+SELECT COUNT(OrderID) AS total_orders
 FROM amazon_sales_data_project;
 
 -- What is the average order value? 
 -- To many decimal places so I used the ROUND function to bring it to 2 decimals
 
-SELECT ROUND(AVG(totalamount),2)
+SELECT ROUND(sum(totalamount)/ count(DISTINCT customerid) , 2) AS avg_order_total
 FROM amazon_sales_data_project;
 
 -- Which product categories generate the most revenue? 
@@ -33,7 +27,8 @@ FROM amazon_sales_data_project;
 SELECT DISTINCT(category) AS category, 
 		SUM(totalamount) AS total_revenue
 FROM amazon_sales_data_project
-GROUP BY category;
+GROUP BY category
+ORDER BY total_revenue DESC;
 
 -- Altering table to solve the double data type. I found that 65 digits was the max that the total could be adjusted to. 
 
@@ -48,7 +43,8 @@ SELECT DISTINCT productid, ProductName, SUM(quantity) AS total_units_sold
 FROM amazon_sales_data_project
 GROUP BY ProductID, ProductName
 ORDER BY SUM(quantity) DESC
-LIMIT 10;
+LIMIT 10
+;
 
 -- What are the top 10 best-selling products by revenue?
 
@@ -73,6 +69,10 @@ GROUP BY orderstatus
 ORDER BY total_orders DESC;
 
 -- What percentage of orders were returned?
+-- using CASE to identify the Returned status to tally the total before dividing to get the percentage. Multiplying by 100 to put in more readable context. 
 
-SELECT 
-;
+SELECT COUNT(*) AS total_orders,
+	SUM(CASE WHEN orderstatus = 'Returned' THEN 1 ELSE 0 END) AS total_returns,
+ROUND(
+	SUM(CASE WHEN orderstatus = 'Returned' THEN 1 ELSE 0 END) / COUNT(*) * 100, 2) AS return_percent
+FROM amazon_sales_data_project;
